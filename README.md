@@ -16,7 +16,7 @@ The model ingests 10 monthly climate indices derived from the ORAS5 reanalysis (
 
 The DESN stacks $n_l$ recurrent reservoirs in series (Fig. 1b). Each reservoir $l$ evolves according to:
 
-$$\mathbf{r}^l_{t+1} = (1-\alpha^l)\mathbf{r}^l_t + \alpha^l\, g\!\left(\mathbf{W}^l_\text{in} X^l_t + \mathbf{W}^l_\text{res} \mathbf{r}^l_t\right) + \xi^l_\text{rc}$$
+$$\mathbf{r}^l_{t+1} = (1-\alpha^l)\mathbf{r}^l_t + \alpha^l g(\mathbf{W}^l_\text{in} X^l_t + \mathbf{W}^l_\text{res} \mathbf{r}^l_t) + \xi^l_\text{rc}$$
 
 Because Reservoir 2 receives Reservoir 1's nonlinear states as inputs, its neurons implicitly encode **higher-order couplings** (2nd → 3rd order and beyond) and **multi-timescale dynamics** that a single-layer ESN cannot represent. The Demo figure illustrates this concretely: Reservoir 1 neurons exhibit regular seasonal-cycle oscillations, while Reservoir 2 neurons display far richer, irregular temporal patterns. All reservoir states are concatenated and mapped to next-month predictions by a single linear readout $\mathbf{W}_\text{out}$, keeping the training problem convex.
 
