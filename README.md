@@ -1,6 +1,6 @@
 # physics-guided DESN
 
-This is code reposity of the paper [Enhancing the predictability limits of ENSO with physics-guided deep echo state networks](https://www.nature.com/articles/s41612-026-01360-5), **DESN** is a lightweight ENSO forecasting machine learning model that achieves skillful Niño 3.4 predictions up to 16–20 months ahead with minimal computational cost.
+This is code reposity of the paper [Enhancing the predictability limits of ENSO with physics-guided deep echo state networks](https://www.nature.com/articles/s41612-026-01360-5). **physics-guided DESN** is a lightweight ENSO forecasting machine learning model that achieves skillful Niño 3.4 predictions up to 16–20 months ahead with minimal computational cost.
 
 ## Overview
 
