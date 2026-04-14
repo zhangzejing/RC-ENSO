@@ -12,7 +12,9 @@ The model ingests 10 monthly climate indices derived from the ORAS5 reanalysis (
 
 ### Architecture: Stacked Reservoirs with Higher-Order Nonlinear Features
 
-![Schematic for DESN generates richer dynamics features](figs/Demo.png)The DESN stacks $n_l$ recurrent reservoirs in series (Fig. 1b). Each reservoir $l$ evolves according to:
+![Schematic for DESN generates richer dynamics features](figs/Demo.png)
+
+The DESN stacks $n_l$ recurrent reservoirs in series (Fig. 1b). Each reservoir $l$ evolves according to:
 
 $$\mathbf{r}^l_{t+1} = (1-\alpha^l)\mathbf{r}^l_t + \alpha^l\, g\!\left(\mathbf{W}^l_\text{in} X^l_t + \mathbf{W}^l_\text{res} \mathbf{r}^l_t\right) + \xi^l_\text{rc}$$
 
