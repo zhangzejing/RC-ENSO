@@ -6,13 +6,13 @@ ENSO (El Niño–Southern Oscillation) is the dominant source of interannual cli
 
 ### Input: 10 Climate Modes across Three Ocean Basins
 
-![Input regions selected by XRO](figs\input_regions.png)
+![Input regions selected by XRO](figs/input_regions.png)
 
 The model ingests 10 monthly climate indices derived from the ORAS5 reanalysis (XRO model selected but also support more or less or others related indices), covering the major ENSO-driving teleconnections: **Niño3.4** (ENSO target), **WWV** (warm water volume), **NPMM**, **SPMM** (meridional modes), **IOB**, **IOD**, **SIOD** (Indian Ocean), **TNA**, **ATL3**, **SASD** (Atlantic). These regions are shown in Fig. 1a overlaid on the global SSTA standard deviation map.
 
 ### Architecture: Stacked Reservoirs with Higher-Order Nonlinear Features
 
-![Schematic for DESN generates richer dynamics features](figs\Demo.png)The DESN stacks $n_l$ recurrent reservoirs in series (Fig. 1b). Each reservoir $l$ evolves according to:
+![Schematic for DESN generates richer dynamics features](figs/Demo.png)The DESN stacks $n_l$ recurrent reservoirs in series (Fig. 1b). Each reservoir $l$ evolves according to:
 
 $$\mathbf{r}^l_{t+1} = (1-\alpha^l)\mathbf{r}^l_t + \alpha^l\, g\!\left(\mathbf{W}^l_\text{in} X^l_t + \mathbf{W}^l_\text{res} \mathbf{r}^l_t\right) + \xi^l_\text{rc}$$
 
@@ -28,7 +28,7 @@ DESN (red) achieves the highest out-of-sample Niño3.4 correlation skill among a
 
 DESN offers substantial computational efficiency. It trains in seconds on a standard CPU, with runtimes comparable to the XRO while achieving forecast skill that matches or exceeds both dynamical and deep learning approaches:
 
-![training_cost](figs\training_cost.png)
+![training_cost](figs/training_cost.png)
 
 ## Data
 
