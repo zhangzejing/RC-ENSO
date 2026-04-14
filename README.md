@@ -26,7 +26,7 @@ Because Reservoir 2 receives Reservoir 1's nonlinear states as inputs, its neuro
 
 ![Out-of-sample Niño3.4 forecast skill (2002–2023)](figs/forecast_skill.png)
 
-DESN (red) achieves the highest out-of-sample Niño3.4 correlation skill among all compared models out to ~19 months lead time — outperforming XRO (black), 3D-Geoformer (blue), dynamical model ensembles (DYN AVG), and a broad suite of operational forecasting systems. The dashed line marks the ACC = 0.5 skill threshold. The target-month heatmaps (bottom row) show that DESN maintains ACC > 0.5 across virtually all initialisation months at leads up to 12–18 months, a region of high skill markedly larger than for the single-layer ESN or minimal-ESN configurations.
+DESN (red) achieves the highest out-of-sample Niño3.4 correlation skill among all compared models out to ~16 months lead time — outperforming XRO (black), 3D-Geoformer (blue), dynamical model ensembles (DYN AVG), and a broad suite of operational forecasting systems. The dashed line marks the ACC = 0.5 skill threshold. The target-month heatmaps (bottom row) show that DESN maintains ACC > 0.5 across virtually all initialisation months at leads up to 11–19 months, a region of high skill markedly larger than for the single-layer ESN or minimal-ESN configurations.
 
 ### Computing Efficiency
 
@@ -47,7 +47,7 @@ Benchmarked on Intel Core i9-14900K (single-threaded reservoir update). Training
 
 | Architecture | Reservoir size | Time per member (train + forecast) |
 |---|---|---|
-| Single-layer ESN (`n_l=1`) | 20 000 | ~30 s |
+| Single-layer ESN (`n_l=1`) | 20 000 | ~20 s |
 | Two-layer DESN (`n_l=2`) | 20 000 + 12 000 | 3–5 min |
 | Three-layer DESN (`n_l=3`) or larger | 20 000 + 12 000 + … | 10 min+ |
 
