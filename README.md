@@ -49,7 +49,7 @@ Benchmarked on Intel Core i9-14900K (single-threaded reservoir update). Training
 | Two-layer DESN (`n_l=2`) | 20 000 + 12 000 | 3–5 min |
 | Three-layer DESN (`n_l=3`) or larger | 20 000 + 12 000 + … | 10 min+ |
 
-> `nmembers` multiplies the above times directly. For example, a two-layer DESN with `nmembers=10` takes roughly 30–50 minutes. Fig. 4 (`error_growth.ipynb`) : Due to error perturbations, it is necessary to verify robustness under different initial conditions; this typically requires a runtime of `init_perturbs * nmembers * time per member`.
+> `nmembers` multiplies the above times directly. For example, a two-layer DESN with `nmembers=10` takes roughly 30–50 minutes. Fig. 4 (`error_growth.ipynb`) : Due to error perturbations, it is necessary to verify robustness under different initial conditions and evolve enough steps, roughly 5 times(100 months) vs forecast inference (21 months); this typically requires a runtime of `init_perturbs * nmembers * time per member * 5`.
 
 ## Scripts
 
@@ -62,8 +62,6 @@ Core library module. Import with `from RCENSO import *` and is organized into fi
 - **Section 3 — Analysis**: `ndforecast_skill`, `calculate_ensemble_skill`, `cal_rmse`, `fast_stochastic_ESN_error_growth` — compute Pearson correlation, RMSE, and perturbation error growth as functions of lead time.
 - **Section 4 — Visualization**: `plot_main_skills_with_legend`, `visualize_skill_vs_baseline`, `visualize_skill_comparison_vs_baseline` — publication-quality forecast skill plots.
 - **Section 5 — Helpers**: `reorder_and_rename_results`, `convert_to_standard_calendar`, `standardize_time_to_month_start` — time-axis utilities and result reordering.
-
----
 
 ## Notebooks
 
