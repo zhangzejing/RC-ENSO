@@ -6,7 +6,7 @@ ENSO (El Niño–Southern Oscillation) is the dominant source of interannual cli
 
 ### Input: 10 Climate Modes across Three Ocean Basins
 
-![Schematic for DESN generates richer dynamics features](figs\input_regions.png)
+![Input regions selected by XRO](figs\input_regions.png)
 
 The model ingests 10 monthly climate indices derived from the ORAS5 reanalysis (XRO model selected but also support more or less or others related indices), covering the major ENSO-driving teleconnections: **Niño3.4** (ENSO target), **WWV** (warm water volume), **NPMM**, **SPMM** (meridional modes), **IOB**, **IOD**, **SIOD** (Indian Ocean), **TNA**, **ATL3**, **SASD** (Atlantic). These regions are shown in Fig. 1a overlaid on the global SSTA standard deviation map.
 
