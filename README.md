@@ -6,15 +6,15 @@ ENSO (El Niño–Southern Oscillation) is the dominant source of interannual cli
 
 ### Input: 10 Climate Modes across Three Ocean Basins
 
-![Input regions selected by XRO](figs\input_regions.png)
+![Input regions selected by XRO](figs/input_regions.png)
 
 The model ingests 10 monthly climate indices derived from the ORAS5 reanalysis (XRO model selected but also support more or less or others related indices), covering the major ENSO-driving teleconnections: **Niño3.4** (ENSO target), **WWV** (warm water volume), **NPMM**, **SPMM** (meridional modes), **IOB**, **IOD**, **SIOD** (Indian Ocean), **TNA**, **ATL3**, **SASD** (Atlantic). These regions are shown in Fig. 1a overlaid on the global SSTA standard deviation map.
 
 ### Architecture: Stacked Reservoirs with Higher-Order Nonlinear Features
 
-![Schematic for DESN generates richer dynamics features](figs\Demo.png)The DESN stacks $n_l$ recurrent reservoirs in series (Fig. 1b). Each reservoir $l$ evolves according to:
+![Schematic for DESN generates richer dynamics features](figs/demo.png)The DESN stacks $n_l$ recurrent reservoirs in series (Fig. 1b). Each reservoir $l$ evolves according to:
 
-$$\mathbf{r}^l_{t+1} = (1-\alpha^l)\mathbf{r}^l_t + \alpha^l\, g\!\left(\mathbf{W}^l_\text{in} X^l_t + \mathbf{W}^l_\text{res} \mathbf{r}^l_t\right) + \xi^l_\text{rc}$$
+$$\mathbf{r}^l_{t+1} = (1-\alpha^l)\mathbf{r}^l_t + \alpha^l g(\mathbf{W}^l_\text{in} X^l_t + \mathbf{W}^l_\text{res} \mathbf{r}^l_t) + \xi^l_\text{rc}$$
 
 Because Reservoir 2 receives Reservoir 1's nonlinear states as inputs, its neurons implicitly encode **higher-order couplings** (2nd → 3rd order and beyond) and **multi-timescale dynamics** that a single-layer ESN cannot represent. The Demo figure illustrates this concretely: Reservoir 1 neurons exhibit regular seasonal-cycle oscillations, while Reservoir 2 neurons display far richer, irregular temporal patterns. All reservoir states are concatenated and mapped to next-month predictions by a single linear readout $\mathbf{W}_\text{out}$, keeping the training problem convex.
 
@@ -28,7 +28,7 @@ DESN (red) achieves the highest out-of-sample Niño3.4 correlation skill among a
 
 DESN offers substantial computational efficiency. It trains in seconds on a standard CPU, with runtimes comparable to the XRO while achieving forecast skill that matches or exceeds both dynamical and deep learning approaches:
 
-![training_cost](figs\training_cost.png)
+![training_cost](figs/training_cost.png)
 
 ## Data
 
