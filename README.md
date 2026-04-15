@@ -1,4 +1,6 @@
-# RCENSO-simple
+# physics-guided DESN
+
+This is code reposity of the paper [Enhancing the predictability limits of ENSO with physics-guided deep echo state networks](https://www.nature.com/articles/s41612-026-01360-5). **physics-guided DESN** is a lightweight ENSO forecasting machine learning model that achieves skillful Niño 3.4 predictions up to 16–20 months ahead with minimal computational cost.
 
 ## Overview
 
@@ -12,7 +14,9 @@ The model ingests 10 monthly climate indices derived from the ORAS5 reanalysis (
 
 ### Architecture: Stacked Reservoirs with Higher-Order Nonlinear Features
 
-![Schematic for DESN generates richer dynamics features](figs/demo.png)The DESN stacks $n_l$ recurrent reservoirs in series (Fig. 1b). Each reservoir $l$ evolves according to:
+![Schematic for DESN generates richer dynamics features](figs/demo.png)
+
+The DESN stacks $n_l$ recurrent reservoirs in series (Fig. 1b). Each reservoir $l$ evolves according to:
 
 $$\mathbf{r}^l_{t+1} = (1-\alpha^l)\mathbf{r}^l_t + \alpha^l g(\mathbf{W}^l_\text{in} X^l_t + \mathbf{W}^l_\text{res} \mathbf{r}^l_t) + \xi^l_\text{rc}$$
 
@@ -22,7 +26,7 @@ Because Reservoir 2 receives Reservoir 1's nonlinear states as inputs, its neuro
 
 ![Out-of-sample Niño3.4 forecast skill (2002–2023)](figs/forecast_skill.png)
 
-DESN (red) achieves the highest out-of-sample Niño3.4 correlation skill among all compared models out to ~19 months lead time — outperforming XRO (black), 3D-Geoformer (blue), dynamical model ensembles (DYN AVG), and a broad suite of operational forecasting systems. The dashed line marks the ACC = 0.5 skill threshold. The target-month heatmaps (bottom row) show that DESN maintains ACC > 0.5 across virtually all initialisation months at leads up to 12–18 months, a region of high skill markedly larger than for the single-layer ESN or minimal-ESN configurations.
+DESN (red) achieves the highest out-of-sample Niño3.4 correlation skill among all compared models out to ~16 months lead time — outperforming XRO (black), 3D-Geoformer (blue), dynamical model ensembles (DYN AVG), and a broad suite of operational forecasting systems. The dashed line marks the ACC = 0.5 skill threshold. The target-month heatmaps (bottom row) show that DESN maintains ACC > 0.5 across virtually all initialisation months at leads up to 11–19 months, a region of high skill markedly larger than for the single-layer ESN or minimal-ESN configurations.
 
 ### Computing Efficiency
 
@@ -43,11 +47,11 @@ Benchmarked on Intel Core i9-14900K (single-threaded reservoir update). Training
 
 | Architecture | Reservoir size | Time per member (train + forecast) |
 |---|---|---|
-| Single-layer ESN (`n_l=1`) | 20 000 | ~30 s |
+| Single-layer ESN (`n_l=1`) | 20 000 | ~20 s |
 | Two-layer DESN (`n_l=2`) | 20 000 + 12 000 | 3–5 min |
 | Three-layer DESN (`n_l=3`) or larger | 20 000 + 12 000 + … | 10 min+ |
 
-> `nmembers` multiplies the above times directly. For example, a two-layer DESN with `nmembers=10` takes roughly 30–50 minutes. Fig. 4 (`error_growth.ipynb`) : Due to error perturbations, it is necessary to verify robustness under different initial conditions; this typically requires a runtime of `init_perturbs * nmembers * time per member`.
+> `nmembers` multiplies the above times directly. For example, a two-layer DESN with `nmembers=10` takes roughly 30–50 minutes. Fig. 4 (`error_growth.ipynb`) : Due to error perturbations, it is necessary to verify robustness under different initial conditions and evolve enough steps, roughly 5 times(100 months) vs forecast inference (21 months); this typically requires a runtime of `init_perturbs * nmembers * time per member * 5`.
 
 ## Scripts
 
@@ -60,8 +64,6 @@ Core library module. Import with `from RCENSO import *` and is organized into fi
 - **Section 3 — Analysis**: `ndforecast_skill`, `calculate_ensemble_skill`, `cal_rmse`, `fast_stochastic_ESN_error_growth` — compute Pearson correlation, RMSE, and perturbation error growth as functions of lead time.
 - **Section 4 — Visualization**: `plot_main_skills_with_legend`, `visualize_skill_vs_baseline`, `visualize_skill_comparison_vs_baseline` — publication-quality forecast skill plots.
 - **Section 5 — Helpers**: `reorder_and_rename_results`, `convert_to_standard_calendar`, `standardize_time_to_month_start` — time-axis utilities and result reordering.
-
----
 
 ## Notebooks
 
