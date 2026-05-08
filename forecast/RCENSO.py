@@ -717,6 +717,60 @@ def TPRC_Forecast_Ensemble(trained_models, Ytest, TP_test=None, steps=22,
     Ypred_mean = np.mean(ensemble_predictions, axis=0)
     return Ypred_mean, ensemble_predictions
 
+def realtime_forecast(models, x0, TP_rt, t0, forecast_steps):
+    """
+    Iterative multi-step real-time forecast for a given model ensemble.
+
+    Parameters
+    ----------
+    models : list of dict
+        Selected model list, each item must contain key 'esn' with a .run() method.
+        e.g. [{'arch': 'DESN$', 'member': 0, 'esn': esn_obj}, ...]
+    x0 : ndarray, shape (n_vars,)
+        Latest observed state (initial condition).
+    TP_rt : ndarray, shape (T_full + forecast_steps, n_tp)
+        RCTP (known external forcing) covering history + forecast leads.
+    t0 : int
+        Time index of the last observed month in TP_rt (i.e. len(history)).
+    forecast_steps : int
+        Number of lead months to predict.
+
+    Returns
+    -------
+    member_preds : ndarray, shape (n_models, forecast_steps + 1, n_vars)
+        Individual forecasts. Lead 0 is the observed x0; leads 1..forecast_steps
+        are model predictions.
+    ens_mean : ndarray, shape (forecast_steps + 1, n_vars)
+        Ensemble mean across all models.
+    ens_std : ndarray, shape (forecast_steps + 1, n_vars)
+        Ensemble standard deviation.
+    """
+    member_preds = []
+
+    for model in models:
+        esn = model['esn']
+        fcst = [x0.copy()]                     # lead 0 = observation
+
+        # Reservoir input: [state, RCTP] at t0-1 (last observed time)
+        rctp = TP_rt[t0 - 1, :].reshape(1, -1)
+        x = np.hstack((x0.reshape(1, -1), rctp))
+
+        for j in range(1, forecast_steps + 1):
+            y = esn.run(x)                     # (1, n_vars)
+            fcst.append(y[0].copy())
+
+            # Advance to next lead's known RCTP
+            rctp = TP_rt[t0 - 1 + j, :].reshape(1, -1)
+            x = np.hstack((y, rctp))
+
+        member_preds.append(np.array(fcst))    # (forecast_steps+1, n_vars)
+
+    member_preds = np.array(member_preds)      # (n_models, forecast_steps+1, n_vars)
+    ens_mean = member_preds.mean(axis=0)
+    ens_std  = member_preds.std(axis=0)
+
+    return member_preds, ens_mean, ens_std
+
 
 def dimension_addition_ensemble_forecast(ds, tl, hypers, wl=0, dl=0,
                                          retain_var=('Nino34', 'WWV'),
