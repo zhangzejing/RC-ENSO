@@ -5,3 +5,4 @@ paper.pdf
 /forecast/models/
 /forecast/__pycache__/
 /forecast/desn_forecast_2026-03/selected_members.pkl
+*.pkl
