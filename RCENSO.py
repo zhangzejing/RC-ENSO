@@ -521,7 +521,7 @@ def get_RCTP(TS, steps=22, omega=2*np.pi/12, order=3, bias=0):
 
 def TPRC_Forecast_Train_Test_Ensemble(
     TS, tl, wl=0, steps=22, dl=0, hypers=None,
-    nmember=10, isReforecast=False, noise_ini=0.0
+    nmember=10, isReforecast=False, noise_ini=0.0, backend='cpu', batch_size=2
 ):
     """Train an ESN ensemble and run multi-step rolling forecasts in one call.
 
@@ -571,6 +571,22 @@ def TPRC_Forecast_Train_Test_Ensemble(
     Xtrain = TS_TP[:tl - 1]
     Ytrain = TS[1:tl]
 
+    if backend == 'cuda':
+        if noise_ini != 0:
+            raise ValueError('CUDA deterministic forecasts require noise_ini=0')
+        models, _ = TPRC_Train_Ensemble(TS, tl, dl, hypers, nmember,
+                                      backend=backend, batch_size=batch_size)
+        from RCENSO_gpu import forecast_members
+        start, stop = (dl, tl) if isReforecast else (tl + wl, len(TS))
+        predictions = forecast_members(models, TS[start:stop], TP[start:stop + steps], steps, batch_size)
+        ensemble = np.empty((nmember, stop - start, TS_TP.shape[1], steps))
+        ensemble[:, :, :TS.shape[1]] = predictions
+        for lead in range(steps):
+            ensemble[:, :, TS.shape[1]:, lead] = TP[start + lead:stop + lead]
+        return ensemble.mean(axis=0), TS_TP[start:stop], ensemble
+    if backend != 'cpu':
+        raise ValueError("backend must be 'cpu' or 'cuda'")
+
     if isReforecast:
         ensemble_predictions = np.zeros(
             (nmember, TS_TP[dl:tl].shape[0], TS_TP[dl:tl].shape[1], steps))
@@ -610,7 +626,8 @@ def TPRC_Forecast_Train_Test_Ensemble(
 
 
 def TPRC_Train_Ensemble(TS, tl, dl=0, hypers=None, nmember=10,
-                        tp_omega=2*np.pi/12, tp_order=2, tp_bias=0):
+                        tp_omega=2*np.pi/12, tp_order=2, tp_bias=0,
+                        backend='cpu', batch_size=2):
     """Train an ensemble of ESNs and return the trained models with TP features.
 
     Separates the training phase from forecasting so that the same set of
@@ -635,6 +652,11 @@ def TPRC_Train_Ensemble(TS, tl, dl=0, hypers=None, nmember=10,
         Number of harmonics for TP features.
     tp_bias : float
         Constant offset for TP features.
+    backend : {'cpu', 'cuda'}
+        CUDA batches support the paper's rc_connectivity=0, lr=1 models.
+        Training noise is preserved; CUDA inference is deterministic.
+    batch_size : int
+        CUDA members per batch (2 fits the 16GB reference GPU).
 
     Returns
     -------
@@ -648,6 +670,18 @@ def TPRC_Train_Ensemble(TS, tl, dl=0, hypers=None, nmember=10,
     TS_TP = np.hstack((TS, TP))
     Xtrain = TS_TP[:tl - 1]
     Ytrain = TS[1:tl]
+
+    if backend == 'cuda':
+        from RCENSO_gpu import iter_train_batches
+        seed = hypers.get('seed')
+        rng = np.random.default_rng(seed)
+        seeds = rng.integers(0, 2**31 - 1, size=nmember).tolist()
+        trained_models = []
+        for batch in iter_train_batches(Xtrain, Ytrain, hypers, seeds, batch_size, dl):
+            trained_models.extend(batch)
+        return trained_models, TP
+    if backend != 'cpu':
+        raise ValueError("backend must be 'cpu' or 'cuda'")
 
     trained_models = []
     for m in tqdm(range(nmember), desc="Training ensemble members"):
@@ -694,6 +728,13 @@ def TPRC_Forecast_Ensemble(trained_models, Ytest, TP_test=None, steps=22,
     if TP_test is None:
         TP_test = get_RCTP(Ytest, steps=steps, omega=tp_omega, order=tp_order, bias=0)
 
+    if trained_models and hasattr(trained_models[0], 'layers'):
+        from RCENSO_gpu import forecast_members
+        if noise_ini != 0:
+            raise ValueError('CUDA deterministic forecasts require noise_ini=0')
+        predictions = forecast_members(trained_models, Ytest, TP_test, steps)
+        return predictions.mean(axis=0), predictions
+
     Ytest_TP = np.hstack((Ytest, TP_test[:-steps]))
     ensemble_predictions = np.zeros((nmember, Ytest.shape[0], Ytest.shape[1], steps))
 
@@ -716,6 +757,29 @@ def TPRC_Forecast_Ensemble(trained_models, Ytest, TP_test=None, steps=22,
 
     Ypred_mean = np.mean(ensemble_predictions, axis=0)
     return Ypred_mean, ensemble_predictions
+
+
+def realtime_forecast(models, x0, TP_rt, t0, forecast_steps):
+    """Forecast from the last observed month; lead zero is exactly x0."""
+    if not models or forecast_steps < 1 or t0 < 1 or len(TP_rt) < t0 + forecast_steps:
+        raise ValueError('Models, positive horizon and complete monthly forcing are required')
+    if hasattr(models[0]['esn'], 'layers'):
+        from RCENSO_gpu import forecast_members
+        members = forecast_members([m['esn'] for m in models], np.asarray(x0)[None],
+                                   TP_rt[t0 - 1:], forecast_steps + 1)
+        members = members[:, 0].transpose(0, 2, 1)
+    else:
+        members = []
+        for model in models:
+            x = np.hstack((np.asarray(x0)[None], TP_rt[t0 - 1:t0]))
+            values = [np.asarray(x0).copy()]
+            for lead in range(1, forecast_steps + 1):
+                y = model['esn'].run(x)
+                values.append(y[0].copy())
+                x = np.hstack((y, TP_rt[t0 - 1 + lead:t0 + lead]))
+            members.append(values)
+        members = np.asarray(members)
+    return members, members.mean(axis=0), members.std(axis=0)
 
 
 def dimension_addition_ensemble_forecast(ds, tl, hypers, wl=0, dl=0,

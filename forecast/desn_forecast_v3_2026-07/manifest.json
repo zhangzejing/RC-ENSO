@@ -1,0 +1,299 @@
+{
+  "source_sha256": "17709d612599abf5c6eb2236d8aed7f892f9047a832ec83ecadb37974e29e22d",
+  "selection": {
+    "indices": [
+      134,
+      2,
+      116,
+      131,
+      5,
+      136,
+      7,
+      220,
+      18,
+      160,
+      9,
+      208,
+      284,
+      3,
+      118,
+      4,
+      184,
+      164,
+      42,
+      248
+    ],
+    "configs": [
+      {
+        "deep": true,
+        "increment": false,
+        "overrides": {
+          "noise_rc": [
+            0.025,
+            0.0
+          ],
+          "input_scaling": [
+            1.0,
+            1.0
+          ]
+        },
+        "seed": 20361025
+      },
+      {
+        "deep": false,
+        "increment": false,
+        "overrides": {
+          "noise_rc": 0.025,
+          "input_scaling": 1.0
+        },
+        "seed": 20261013
+      },
+      {
+        "deep": true,
+        "increment": false,
+        "overrides": {
+          "noise_rc": [
+            0.025,
+            0.0
+          ],
+          "input_scaling": [
+            1.0,
+            0.25
+          ]
+        },
+        "seed": 20361031
+      },
+      {
+        "deep": true,
+        "increment": false,
+        "overrides": {
+          "noise_rc": [
+            0.025,
+            0.0
+          ],
+          "input_scaling": [
+            1.0,
+            1.0
+          ]
+        },
+        "seed": 20361022
+      },
+      {
+        "deep": false,
+        "increment": false,
+        "overrides": {
+          "noise_rc": 0.025,
+          "input_scaling": 1.0
+        },
+        "seed": 20261016
+      },
+      {
+        "deep": true,
+        "increment": false,
+        "overrides": {
+          "noise_rc": [
+            0.025,
+            0.0
+          ],
+          "input_scaling": [
+            1.0,
+            1.0
+          ]
+        },
+        "seed": 20361027
+      },
+      {
+        "deep": false,
+        "increment": false,
+        "overrides": {
+          "noise_rc": 0.025,
+          "input_scaling": 1.0
+        },
+        "seed": 20261018
+      },
+      {
+        "deep": true,
+        "increment": false,
+        "overrides": {
+          "noise_rc": [
+            0.075,
+            0.0
+          ],
+          "input_scaling": [
+            1.0,
+            1.0
+          ]
+        },
+        "seed": 20361015
+      },
+      {
+        "deep": false,
+        "increment": false,
+        "overrides": {
+          "noise_rc": 0.025,
+          "input_scaling": 1.0
+        },
+        "seed": 20261029
+      },
+      {
+        "deep": true,
+        "increment": false,
+        "overrides": {
+          "noise_rc": [
+            0.05,
+            0.0
+          ],
+          "input_scaling": [
+            1.0,
+            0.25
+          ]
+        },
+        "seed": 20361027
+      },
+      {
+        "deep": false,
+        "increment": false,
+        "overrides": {
+          "noise_rc": 0.025,
+          "input_scaling": 1.0
+        },
+        "seed": 20261020
+      },
+      {
+        "deep": true,
+        "increment": false,
+        "overrides": {
+          "noise_rc": [
+            0.075,
+            0.0
+          ],
+          "input_scaling": [
+            1.0,
+            0.25
+          ]
+        },
+        "seed": 20361027
+      },
+      {
+        "deep": true,
+        "increment": false,
+        "overrides": {
+          "noise_rc": [
+            0.1,
+            0.0
+          ],
+          "input_scaling": [
+            1.0,
+            1.0
+          ]
+        },
+        "seed": 20361031
+      },
+      {
+        "deep": false,
+        "increment": false,
+        "overrides": {
+          "noise_rc": 0.025,
+          "input_scaling": 1.0
+        },
+        "seed": 20261014
+      },
+      {
+        "deep": true,
+        "increment": false,
+        "overrides": {
+          "noise_rc": [
+            0.025,
+            0.0
+          ],
+          "input_scaling": [
+            1.0,
+            0.25
+          ]
+        },
+        "seed": 20361033
+      },
+      {
+        "deep": false,
+        "increment": false,
+        "overrides": {
+          "noise_rc": 0.025,
+          "input_scaling": 1.0
+        },
+        "seed": 20261015
+      },
+      {
+        "deep": true,
+        "increment": false,
+        "overrides": {
+          "noise_rc": [
+            0.05,
+            0.0
+          ],
+          "input_scaling": [
+            1.0,
+            1.0
+          ]
+        },
+        "seed": 20361027
+      },
+      {
+        "deep": true,
+        "increment": false,
+        "overrides": {
+          "noise_rc": [
+            0.05,
+            0.0
+          ],
+          "input_scaling": [
+            1.0,
+            0.25
+          ]
+        },
+        "seed": 20361031
+      },
+      {
+        "deep": false,
+        "increment": false,
+        "overrides": {
+          "noise_rc": 0.05,
+          "input_scaling": 1.0
+        },
+        "seed": 20261029
+      },
+      {
+        "deep": true,
+        "increment": false,
+        "overrides": {
+          "noise_rc": [
+            0.1,
+            0.0
+          ],
+          "input_scaling": [
+            1.0,
+            0.25
+          ]
+        },
+        "seed": 20361019
+      }
+    ],
+    "validation_score": 0.5034037042953383
+  },
+  "train_start": "1979-01",
+  "train_end": "2026-07",
+  "mode_names": [
+    "Nino34",
+    "WWV",
+    "NPMM",
+    "SPMM",
+    "IOB",
+    "TNA",
+    "ATL3",
+    "IOD",
+    "SIOD",
+    "SASD"
+  ],
+  "forecast_steps": 21,
+  "forecast_noise": false,
+  "tp_order": 2
+}

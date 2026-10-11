@@ -1,0 +1,15 @@
+# Python 3.10; tested on RTX 4070 Ti SUPER. Keep the original CPU environment separate.
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch==2.11.0+cu128
+numpy==2.2.6
+scipy==1.15.3
+pandas==2.3.3
+xarray==2025.6.1
+netCDF4==1.7.4
+cftime==1.6.5
+reservoirpy==0.3.12
+XRO==1.0.1
+matplotlib==3.10.9
+tqdm==4.67.3
+threadpoolctl==3.7.0
+ipykernel==7.3.0

@@ -1,0 +1,21 @@
+{
+  "train_period": "1979-01 through 2026-07",
+  "n_members": 20,
+  "checkpoint": "D:\\MyRepo\\RC-ENSO\\RCENSO-simple\\forecast\\desn_forecast_v3_2026-07\\models\\selected_members.pkl",
+  "elapsed_seconds": 6.735969400004251,
+  "historical_benchmark": {
+    "mean_difference_1_19": 0.006868152365638375,
+    "worst_lead_difference": -0.00532416034580574,
+    "long_mean_difference_12_19": 0.01522077866976234,
+    "leads_within_0_01": 19,
+    "pass_mean": true,
+    "pass_every_lead": true,
+    "tolerance": 0.01
+  },
+  "first_month": {
+    "observation": 2.101342818235061,
+    "last_observed_increment": 0.5723177028664239,
+    "original_forecast_increment": 0.01429248972869157,
+    "new_forecast_increment": 0.2126391816829618
+  }
+}

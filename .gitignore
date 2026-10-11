@@ -6,3 +6,9 @@ paper.pdf
 /forecast/__pycache__/
 /forecast/desn_forecast_2026-03/selected_members.pkl
 *.pkl
+/.venv-gpu/
+/gpu_runs/
+/forecast/desn_forecast_v3_*/models/
+/forecast/zenodo_release/
+/zenodo_release/
+/release/
