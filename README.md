@@ -2,6 +2,8 @@
 
 This is code reposity of the paper [Enhancing the predictability limits of ENSO with physics-guided deep echo state networks](https://www.nature.com/articles/s41612-026-01360-5). **physics-guided DESN** is a lightweight ENSO forecasting machine learning model that achieves skillful Niño 3.4 predictions up to 16–20 months ahead with minimal computational cost.
 
+Pretrained 20-member ESN/DESN ensemble: [Download from Zenodo](https://zenodo.org/records/23300281).
+
 ## Overview
 
 ENSO (El Niño–Southern Oscillation) is the dominant source of interannual climate variability, but its predictability is fundamentally limited by nonlinear ocean–atmosphere dynamics. This repository implements a **Deep Echo State Network (DESN)** approach to multi-variable ENSO forecasting that extends predictability by capturing higher-order nonlinear couplings across the Pacific, Indian, and Atlantic basins.
