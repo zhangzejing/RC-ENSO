@@ -23,11 +23,27 @@ def run(benchmark_dir, batch_size=2, output=None):
     benchmark_dir = Path(benchmark_dir).resolve()
     out = Path(output).resolve() if output else ROOT/'forecast/desn_forecast_v3_2026-07'
     checkpoint = out/'models/selected_members.pkl'
+    checkpoint_source = checkpoint
     saved = None
     started = time.perf_counter()
     if checkpoint.exists():
         with checkpoint.open('rb') as f:
             saved = pickle.load(f)
+    else:
+        member_files = sorted(checkpoint.parent.glob('member_*.pkl'))
+        if member_files:
+            if member_files != [checkpoint.parent/f'member_{i:02d}.pkl' for i in range(1, 21)]:
+                raise ValueError('All 20 member files (member_01.pkl through member_20.pkl) are required')
+            members = []
+            for i, path in enumerate(member_files):
+                with path.open('rb') as f:
+                    member = pickle.load(f)
+                if member['member'] != i or (members and member['manifest'] != members[0]['manifest']):
+                    raise ValueError('Member files have inconsistent metadata or ordering')
+                members.append(member)
+            saved = dict(manifest=members[0]['manifest'],
+                         selected_models=[member['selected_model'] for member in members])
+            checkpoint_source = checkpoint.parent
     if (benchmark_dir/'selection.json').exists():
         selection = json.loads((benchmark_dir/'selection.json').read_text(encoding='utf-8'))
     elif saved is not None:
@@ -99,7 +115,7 @@ def run(benchmark_dir, batch_size=2, output=None):
         with xr.open_dataset(old_path) as ds:
             original = ds.forecast_mean.sel(mode='Nino34').values
     summary = dict(train_period='1979-01 through 2026-07', n_members=20,
-                   checkpoint=str(checkpoint), elapsed_seconds=time.perf_counter()-started,
+                   checkpoint=str(checkpoint_source), elapsed_seconds=time.perf_counter()-started,
                    historical_benchmark=report['parity'],
                    first_month=dict(observation=float(history[-1, 0]),
                        last_observed_increment=float(history[-1, 0]-history[-2, 0]),

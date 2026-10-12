@@ -90,6 +90,14 @@ The checkpoint and predictions are in `forecast/desn_forecast_v3_2026-07/`, incl
 
 Open `forecast/forecast_real_time_v3.ipynb` with **Python (RCENSO GPU)**.
 
+For the pretrained release, extract all 20 model ZIPs and the data/results ZIP into the repository root, preserving their directory structure. These ZIPs use lossless LZMA compression; extract with 7-Zip or Python:
+
+```powershell
+python -c "from pathlib import Path; from zipfile import ZipFile; [ZipFile(p).extractall('.') for p in Path('.').glob('RCENSO_GPU_v3_2026-07_*.zip')]"
+```
+
+V3 loads `models/member_01.pkl` through `member_20.pkl` under `forecast/desn_forecast_v3_2026-07/` directly.
+
 ## Scripts
 
 ### `RCENSO.py`

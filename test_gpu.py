@@ -196,6 +196,22 @@ class GPUChecks(unittest.TestCase):
                 self.assertEqual(str(forecast.time.values[-1])[:10], '2028-04-01')
             self.assertTrue((output/'first_month_diagnosis.png').is_file())
 
+            (output/'models/selected_members.pkl').unlink()
+            (output/'manifest.json').unlink()
+            (output/'results.json').unlink()
+            for i, model in enumerate(models):
+                with (output/f'models/member_{i+1:02d}.pkl').open('wb') as f:
+                    pickle.dump(dict(member=i, manifest=manifest, selected_model=dict(esn=model)), f)
+                if i == 0:
+                    with patch.object(v3, 'ROOT', root), self.assertRaisesRegex(ValueError, 'All 20 member files'):
+                        v3.run(benchmark, output=output)
+            self.assertFalse(list(root.rglob('*.json')))
+            with patch.object(v3, 'ROOT', root), patch.object(train_gpu, 'ROOT', root), redirect_stdout(io.StringIO()):
+                summary = v3.run(benchmark, output=output)
+            self.assertEqual(summary['checkpoint'], str(output/'models'))
+            with xr.open_dataset(output/'realtime_forecast.nc') as forecast:
+                np.testing.assert_allclose(forecast.forecast_mean, np.broadcast_to(data[-1], (22, 10)), atol=2e-6)
+
 
 if __name__ == '__main__':
     unittest.main()
