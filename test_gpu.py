@@ -145,6 +145,57 @@ class GPUChecks(unittest.TestCase):
             np.testing.assert_allclose(forecast_members([model], ts, tp, 5),
                                        forecast_members([ref], ts, tp, 5), atol=2e-5, rtol=2e-5)
 
+    def test_v3_saved_models_without_external_json(self):
+        import hashlib
+        import io
+        import pickle
+        import tempfile
+        from contextlib import redirect_stdout
+        from pathlib import Path
+        from unittest.mock import patch
+        import pandas as pd
+        import xarray as xr
+        import train_gpu
+        from forecast import forecast_real_time_v3 as v3
+        from RCENSO_gpu import initialize_models
+
+        with tempfile.TemporaryDirectory(prefix='rcenso-v3-test-') as folder:
+            root = Path(folder).resolve()
+            self.assertEqual(root.parent, Path(tempfile.gettempdir()).resolve())
+            source = root/'forecast/oras5_indices_1958-2026-07.nc'
+            source.parent.mkdir()
+            names = ['Nino34', 'WWV'] + [f'mode{i}' for i in range(2, 10)]
+            data = np.random.default_rng(5).normal(size=(571, 10))
+            xr.Dataset({name: ('time', data[:, i]) for i, name in enumerate(names)},
+                       coords={'time': pd.date_range('1979-01-01', periods=571, freq='MS')}).to_netcdf(source)
+            h = dict(self.hypers(), units=4, output_dim=10, predict_increment=True)
+            models = initialize_models(h, list(range(19, 39)), 14, 10)
+            for model in models:
+                model.Wout = np.zeros((5, 10))
+            selection = dict(indices=list(range(20)), configs=[dict(deep=False, increment=True, seed=m.seed) for m in models])
+            manifest = dict(source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+                            selection=selection, train_start='1979-01', train_end='2026-07',
+                            mode_names=names, forecast_steps=21, forecast_noise=False, tp_order=2)
+            output = root/'forecast/desn_forecast_v3_2026-07'
+            (output/'models').mkdir(parents=True)
+            with (output/'models/selected_members.pkl').open('wb') as f:
+                pickle.dump(dict(manifest=manifest, selected_models=[dict(esn=m) for m in models]), f)
+            benchmark = root/'gpu_runs/benchmark'
+            benchmark.mkdir(parents=True)
+            np.savez(benchmark/'independent_predictions.npz', observations=data[:70],
+                     predictions=np.broadcast_to(data[None, :70, :, None], (20, 70, 10, 22)))
+            (root/'data/sourcedata').mkdir(parents=True)
+            with (root/'data/sourcedata/fs_ds_to_plot_end.pickle').open('wb') as f:
+                pickle.dump(dict(DESN=np.linspace(1., .2, 22), ESN=np.linspace(1., .1, 22)), f)
+            self.assertFalse(list(root.rglob('*.json')))
+            with patch.object(v3, 'ROOT', root), patch.object(train_gpu, 'ROOT', root), redirect_stdout(io.StringIO()):
+                summary = v3.run(benchmark)
+            self.assertEqual(summary['n_members'], 20)
+            with xr.open_dataset(output/'realtime_forecast.nc') as forecast:
+                np.testing.assert_allclose(forecast.forecast_mean, np.broadcast_to(data[-1], (22, 10)), atol=2e-6)
+                self.assertEqual(str(forecast.time.values[-1])[:10], '2028-04-01')
+            self.assertTrue((output/'first_month_diagnosis.png').is_file())
+
 
 if __name__ == '__main__':
     unittest.main()

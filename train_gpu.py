@@ -85,6 +85,20 @@ def skill(pred, obs):
                 mean_rmse_1_19=float(rmse[1:20].mean()))
 
 
+def benchmark_report(pred, obs):
+    with open(ROOT/'data/sourcedata/fs_ds_to_plot_end.pickle', 'rb') as f:
+        baseline = pickle.load(f)
+    selected = skill(pred, obs)
+    diff = np.asarray(selected['correlation'])[1:20] - baseline['DESN'][1:20]
+    return dict(selected_test=selected, baseline_desn=baseline['DESN'].tolist(),
+                baseline_esn=baseline['ESN'].tolist(),
+                parity=dict(mean_difference_1_19=float(diff.mean()), worst_lead_difference=float(diff.min()),
+                            long_mean_difference_12_19=float(diff[11:19].mean()),
+                            leads_within_0_01=int((diff >= -.01).sum()),
+                            pass_mean=bool(diff.mean() >= -.01), pass_every_lead=bool(diff.min() >= -.01),
+                            tolerance=.01))
+
+
 def centered_forecast_rmse(pred, obs):
     """Empirical error of centered forecast paths, retaining serial covariance."""
     steps = pred.shape[2]
@@ -120,7 +134,7 @@ def benchmark_figure(out, report):
     ax.legend(); fig.tight_layout(); fig.savefig(out/'benchmark_skill.png', dpi=180); plt.close(fig)
 
 
-def figures(out, report, latest, old_forecast, realtime):
+def figures(out, report, latest, old_forecast, realtime, monthly_rmse, centered_rmse):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
@@ -138,6 +152,10 @@ def figures(out, report, latest, old_forecast, realtime):
             values = pd.Series(values).rolling(3, center=True).mean().values
         ax.plot(combined_dates[:len(history)], values[:len(history)], 'ko-', ms=3, label='Observed / boundary')
         ax.plot(combined_dates[len(history)-1:], values[len(history)-1:], 'o-', ms=3, color='#0072B2', label='GPU selected 20')
+        error = centered_rmse if centered else monthly_rmse
+        prediction = values[len(history)-1:]
+        ax.fill_between(dates, prediction-error, prediction+error, color='#0072B2', alpha=.18,
+                        label='Historical RMSE')
         if old_forecast is not None:
             old = np.r_[history, old_forecast[1:]]
             if centered:
@@ -224,7 +242,6 @@ def main():
 
     test = arrays(ds, '2002-01', '2023-12')
     test_tp = get_RCTP(test, steps=22, order=2)
-    test_preds = np.empty((20, len(test), 10, 22))
     benchmark_models = [None] * 20
     started = time.perf_counter()
     for indices, models in train(arrays(ds, '1958-01', '1999-12'), selected_configs, args.batch_size):
@@ -234,18 +251,8 @@ def main():
     # Use the same member grouping as a subsequent checkpoint reload.
     test_preds = forecast_members([item['esn'] for item in benchmark_models], test, test_tp, 22, args.batch_size)
     report['benchmark_seconds'] = time.perf_counter() - started
-    report['selected_test'] = skill(test_preds.mean(axis=0), test)
+    report.update(benchmark_report(test_preds.mean(axis=0), test))
     np.savez_compressed(out/'independent_predictions.npz', predictions=test_preds, observations=test)
-    with open(ROOT/'data/sourcedata/fs_ds_to_plot_end.pickle', 'rb') as f:
-        baseline = pickle.load(f)
-    report['baseline_desn'] = baseline['DESN'].tolist()
-    report['baseline_esn'] = baseline['ESN'].tolist()
-    diff = np.array(report['selected_test']['correlation'])[1:20] - baseline['DESN'][1:20]
-    report['parity'] = dict(mean_difference_1_19=float(diff.mean()), worst_lead_difference=float(diff.min()),
-                            long_mean_difference_12_19=float(diff[11:19].mean()),
-                            leads_within_0_01=int((diff >= -.01).sum()),
-                            pass_mean=bool(diff.mean() >= -.01), pass_every_lead=bool(diff.min() >= -.01),
-                            tolerance=.01)
     print('Benchmark validation after member selection:', report['selected_test'], 'parity', report['parity'], flush=True)
     report['versions'] = dict(python=sys.version, torch=torch.__version__, numpy=np.__version__)
     (out/'results.json').write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding='utf-8')

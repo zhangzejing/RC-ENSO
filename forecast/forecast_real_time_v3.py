@@ -16,13 +16,25 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from RCENSO import get_RCTP, ndforecast_skill, standardize_time_to_month_start
 from RCENSO_gpu import forecast_members
-from train_gpu import train, figures, centered_forecast_rmse
+from train_gpu import train, figures, centered_forecast_rmse, benchmark_report
 
 
 def run(benchmark_dir, batch_size=2, output=None):
     benchmark_dir = Path(benchmark_dir).resolve()
-    selection = json.loads((benchmark_dir/'selection.json').read_text(encoding='utf-8'))
-    report = json.loads((benchmark_dir/'results.json').read_text(encoding='utf-8'))
+    out = Path(output).resolve() if output else ROOT/'forecast/desn_forecast_v3_2026-07'
+    checkpoint = out/'models/selected_members.pkl'
+    saved = None
+    started = time.perf_counter()
+    if checkpoint.exists():
+        with checkpoint.open('rb') as f:
+            saved = pickle.load(f)
+    if (benchmark_dir/'selection.json').exists():
+        selection = json.loads((benchmark_dir/'selection.json').read_text(encoding='utf-8'))
+    elif saved is not None:
+        selection = saved['manifest']['selection']
+    else:
+        with (benchmark_dir/'models/benchmark_members.pkl').open('rb') as f:
+            selection = pickle.load(f)['selection']
     configs = selection['configs']
     if len(configs) != 20 or len(selection['indices']) != 20 or len(set(selection['indices'])) != 20 or batch_size < 1:
         raise ValueError('Exactly 20 distinct selected members and a positive batch size are required')
@@ -37,7 +49,6 @@ def run(benchmark_dir, batch_size=2, output=None):
     history = history_ds.to_array().values.T
     if not np.isfinite(history).all():
         raise ValueError('Training data contains missing or non-finite climate indices')
-    out = Path(output).resolve() if output else ROOT/'forecast/desn_forecast_v3_2026-07'
     out.mkdir(parents=True, exist_ok=True)
     model_dir = out/'models'; model_dir.mkdir(exist_ok=True)
     manifest = dict(source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
@@ -48,11 +59,7 @@ def run(benchmark_dir, batch_size=2, output=None):
     if manifest_file.exists() and json.loads(manifest_file.read_text(encoding='utf-8')) != manifest:
         raise RuntimeError('Output contains a different model selection; choose a new output directory')
     manifest_file.write_text(json.dumps(manifest, indent=2), encoding='utf-8')
-    checkpoint = model_dir/'selected_members.pkl'
-    started = time.perf_counter()
-    if checkpoint.exists():
-        with checkpoint.open('rb') as f:
-            saved = pickle.load(f)
+    if saved is not None:
         if saved['manifest'] != manifest or len(saved['selected_models']) != 20:
             raise ValueError('Saved checkpoint does not match the requested selection and training period')
         selected_models = saved['selected_models']
@@ -79,6 +86,11 @@ def run(benchmark_dir, batch_size=2, output=None):
     with np.load(benchmark_dir/'independent_predictions.npz') as f:
         historical_pred = f['predictions'].mean(axis=0)
         historical_obs = f['observations']
+    if (benchmark_dir/'results.json').exists():
+        report = json.loads((benchmark_dir/'results.json').read_text(encoding='utf-8'))
+    else:
+        report = benchmark_report(historical_pred, historical_obs)
+        report['selection_uses_benchmark'] = True
     _, monthly_rmse = ndforecast_skill(historical_pred, historical_obs, wl=0, ismv3=False)
     centered_rmse = centered_forecast_rmse(historical_pred, historical_obs)
     old_path = ROOT/'forecast/desn_forecast_2026-07/desn_forecast_2026-07.nc'
@@ -112,7 +124,7 @@ def run(benchmark_dir, batch_size=2, output=None):
     frame['Nino34_centered_3month'] = path.rolling(3, center=True).mean().values[1:]
     frame.index.name = 'time'; frame.to_csv(out/'forecast_mean.csv')
     (out/'results.json').write_text(json.dumps(summary, indent=2), encoding='utf-8')
-    figures(out, report, latest, original, mean)
+    figures(out, report, latest, original, mean, monthly_rmse, centered_rmse)
     print('V3 saved:', out, summary['first_month'], flush=True)
     return summary
 
