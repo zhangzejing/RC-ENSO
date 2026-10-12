@@ -90,6 +90,8 @@ The checkpoint and predictions are in `forecast/desn_forecast_v3_2026-07/`, incl
 
 Open `forecast/forecast_real_time_v3.ipynb` with **Python (RCENSO GPU)**.
 
+Pretrained models and forecast results: [Zenodo](https://zenodo.org/records/23300281).
+
 For the pretrained release, extract all 20 model ZIPs and the data/results ZIP into the repository root, preserving their directory structure. These ZIPs use lossless LZMA compression; extract with 7-Zip or Python:
 
 ```powershell
