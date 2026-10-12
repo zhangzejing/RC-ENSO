@@ -53,53 +53,6 @@ Benchmarked on Intel Core i9-14900K (single-threaded reservoir update). Training
 
 > `nmembers` multiplies the above times directly. For example, a two-layer DESN with `nmembers=10` takes roughly 30–50 minutes. Fig. 4 (`error_growth.ipynb`) : Due to error perturbations, it is necessary to verify robustness under different initial conditions and evolve enough steps, roughly 5 times(100 months) vs forecast inference (21 months); this typically requires a runtime of `init_perturbs * nmembers * time per member * 5`.
 
-## GPU training: configuration and quick start
-
-The GPU entry points are in the repository root: `train_gpu.py` trains and selects members, `test_gpu.py` checks CPU/CUDA agreement and model reloads, and `RCENSO_gpu.py` implements the shared backend. Results are saved under `gpu_runs/`. Real-time v3 remains in `forecast/`.
-
-Use Python **3.10** and an NVIDIA GPU with a CUDA-compatible driver. The tested setup is an **RTX 4070 Ti SUPER (16 GB)** with **PyTorch 2.11.0 + CUDA 12.8**. Start with `--batch-size 2`; reduce it to `1` if GPU memory is insufficient. Create a separate environment from the original CPU installation. From the repository root in PowerShell:
-
-```powershell
-python -m venv .venv-gpu
-.\.venv-gpu\Scripts\python.exe -m pip install -r requirements-gpu.txt
-.\.venv-gpu\Scripts\python.exe -c "import torch; assert torch.cuda.is_available(); print(torch.__version__, torch.cuda.get_device_name(0))"
-.\.venv-gpu\Scripts\python.exe -m unittest test_gpu -v
-```
-
-Train **288 candidates**, select **20 members**, compare the correlation curves with `plot_result`, then refit the selected members for the July 2026 real-time forecast:
-
-```powershell
-.\.venv-gpu\Scripts\python.exe -u train_gpu.py --tune --members-per-architecture 24 --selection-min-lead 12 --batch-size 2
-```
-
-The search uses ESN **20,000** units and DESN **20,000 + 12,000** units, `lr=1`, `rc_connectivity=0`, ridge `5e-6`, reservoir noise `{0.025, 0.05, 0.075, 0.1}`, and second-layer input scaling `{0.25, 1}`. CUDA batches members and forecast origins, while a float64 dual ridge solve keeps the linear system small. Training noise is retained; forecasts are deterministic. This backend supports the paper's `W=0, lr=1` reservoirs; other reservoir settings use the original CPU backend. Existing ensemble training functions also accept `backend='cuda', batch_size=2`.
-
-Outputs are in `gpu_runs/2026-10-11-validation-2002-2023/`: `selection.json`, `results.json`, `benchmark_skill.png`, `reforecast_skill.png`, and `models/benchmark_members.pkl`. Completed candidate predictions are cached; repeat the same command to resume. Changed settings require a different `--output` directory. The script refits v3 after all 1–19 month benchmark correlations and 1–21 month reforecast correlations are within **0.01** of the DESN reference.
-
-Real-time v3 trains on every month from **1979-01 through 2026-07**, saves all 20 selected models, and predicts **2026-08 through 2028-04**. To rerun it using the saved selection/checkpoint:
-
-```powershell
-.\.venv-gpu\Scripts\python.exe forecast/forecast_real_time_v3.py --batch-size 2
-```
-
-The checkpoint and predictions are in `forecast/desn_forecast_v3_2026-07/`, including `models/selected_members.pkl`, `realtime_forecast.nc`, `forecast_mean.csv`, and `first_month_diagnosis.png`. For the v3 notebook, register and select the GPU kernel:
-
-```powershell
-.\.venv-gpu\Scripts\python.exe -m ipykernel install --user --name rcenso-gpu --display-name "Python (RCENSO GPU)"
-```
-
-Open `forecast/forecast_real_time_v3.ipynb` with **Python (RCENSO GPU)**.
-
-Pretrained models and forecast results: [Zenodo](https://zenodo.org/records/23300281).
-
-For the pretrained release, extract all 20 model ZIPs and the data/results ZIP into the repository root, preserving their directory structure. These ZIPs use lossless LZMA compression; extract with 7-Zip or Python:
-
-```powershell
-python -c "from pathlib import Path; from zipfile import ZipFile; [ZipFile(p).extractall('.') for p in Path('.').glob('RCENSO_GPU_v3_2026-07_*.zip')]"
-```
-
-V3 loads `models/member_01.pkl` through `member_20.pkl` under `forecast/desn_forecast_v3_2026-07/` directly.
-
 ## Scripts
 
 ### `RCENSO.py`
@@ -185,3 +138,17 @@ mode_addition.ipynb     # one-mode-addition experiment  → Fig. 3c–d
 error_growth.ipynb      # DESN perturbation error growth → Fig. 4b
 plot_result.ipynb       # multi-model benchmark (pre-computed data) → Fig. 2
 ```
+
+## GPU training
+
+Requires Python **3.10** and an NVIDIA CUDA GPU. Run from the repository root:
+
+```powershell
+python -m venv .venv-gpu
+.\.venv-gpu\Scripts\python.exe -m pip install -r requirements-gpu.txt
+.\.venv-gpu\Scripts\python.exe -u train_gpu.py --tune --members-per-architecture 24
+```
+
+The script trains 288 candidates, selects 20 members, and runs the v3 forecast.
+
+Pretrained models and results: [Zenodo](https://zenodo.org/records/23300281). Extract all ZIPs into the repository root with 7-Zip to use them with `forecast/forecast_real_time_v3.py`.
